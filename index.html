@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React-Redux</title>
+</head>
+
+<body>
+
+    <main>
+        <section class="todo">
+            <h2>Todo</h2>
+            <form action="" onsubmit="createGoal(); return false;">
+                <label for="todo">Name</label>
+                <input type="text" name="todo" id="todo" placeholder="Todo Name">
+                <input type="submit" value="Submit">
+            </form>
+            <div class="list-item">
+                <ol>
+                </ol>
+            </div>
+        </section>
+
+        <section class="goal">
+            <h2>Goal</h2>
+            <form action="" onsubmit="createGoal(); return false;">
+                <label for="goal">Name</label>
+                <input type="text" name="goal" id="goal" placeholder="Goal Name">
+                <input type="submit" value="Submit">
+            </form>
+        </section>
+    </main>
+
+    <script type="text/javascript">
+
+        const generateId = () => {
+            return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+
+        const createTodo = () => {
+            const input = document.getElementById('todo');
+            const todoName = input.value;
+            input.value = ''
+
+            store.dispatch({
+                id: generateId(),
+                name: todoName,
+                completed: false
+            })
+        }
+
+        const ADD_TODO = 'ADD_TODO';
+        const UPDATE_TODO = 'UPDATE_TODO';
+        const TOGGLE_TODO = 'TOGGLE_TODO';
+        const REMOVE_TODO = 'REMOVE_TODO';
+        const ADD_GOAL = 'ADD_GOAL';
+        const UPDATE_GOAL = 'UPDATE_GOAL';
+        const REMOVE_GOAL = 'REMOVE_GOAL';
+        const goals = (state = [], action) => {
+            switch (action.type) {
+                case ADD_GOAL:
+                    return state.concat([action.goal])
+                    break;
+                case UPDATE_GOAL:
+                    return state.map(goal => goal.id !== action.id ? goal : Object.assign({}, goal, action.goal))
+                    break;
+                case REMOVE_GOAL:
+                    return state.filter(goal => goal.id == action.id)
+                    break;
+
+                default:
+                    return state
+                    break;
+            }
+        }
+
+        const todos = (state = [], action) => {
+            switch (action.type) {
+                case ADD_TODO:
+                    return state.concat([action.todo])
+                    break;
+                case UPDATE_TODO:
+                    return state.map(todo => todo.id !== action.id ? todo : Object.assign({}, todo, action.todo))
+                    break;
+                case TOGGLE_TODO:
+                    return state.map(todo => todo.id !== action.id ? todo : Object.assign({}, todo, { completed: !todo.completed }))
+                    break;
+                case REMOVE_TODO:
+                    return state.filter(todo => todo.id == action.id)
+                    break;
+
+                default:
+                    return state
+                    break;
+            }
+        }
+
+        const addTodoAction = (todo) => {
+            return {
+                type: ADD_TODO,
+                todo: todo
+            }
+        }
+
+        const updateTodoAction = (todo) => {
+            return {
+                type: UPDATE_TODO,
+                todo: todo
+            }
+        }
+
+        const toggleTodoAction = (id) => {
+            return {
+                type: TOGGLE_TODO,
+                id: id
+            }
+        }
+
+        const removeTodoAction = (id) => {
+            return {
+                type: REMOVE_TODO,
+                id: id
+            }
+        }
+
+        const addGoalAction = (goal) => {
+            return {
+                type: ADD_GOAL,
+                goal: goal
+            }
+        }
+
+        const updateGoalAction = (goal) => {
+            return {
+                type: UPDATE_GOAL,
+                goal: goal
+            }
+        }
+
+        const removeGoalAction = (id) => {
+            return {
+                type: REMOVE_GOAL,
+                id: id
+            }
+        }
+
+        const app = (state = {}, action) => {
+            return {
+                todos: todos(state.todos, action),
+                goals: goals(state.goals, action),
+
+            }
+        }
+
+        const createStore = (app) => {
+            let state = [];
+            let listeners = [];
+            const getState = () => state;
+
+            const subscribe = (listener) => {
+                listeners.push(listener)
+
+                return () => {
+                    listeners = listeners.filter(x => x.listener != listener)
+                }
+            }
+
+            const dispatch = (action) => {
+                state = app(state, action);
+                listeners.forEach(listener => listener())
+            }
+
+            return {
+                getState,
+                subscribe,
+                dispatch
+            }
+        }
+
+        const store = createStore(app);
+
+        store.subscribe(() => {
+            console.log('The new state is: ', store.getState());
+        })
+
+        store.dispatch({
+            type: ADD_TODO,
+            todo: {
+                id: 1,
+                name: 'Learning English',
+                completed: false
+            }
+        })
+
+        store.dispatch({
+            type: ADD_TODO,
+            todo: {
+                id: 2,
+                name: 'Learning React',
+                completed: false
+            }
+        })
+
+        store.dispatch({
+            type: ADD_TODO,
+            todo: {
+                id: 3,
+                name: 'Learning Angular',
+                completed: false
+            }
+        })
+
+        store.dispatch({
+            type: ADD_GOAL,
+            goal: {
+                id: 1,
+                name: 'Get React Cert',
+                completed: false
+            }
+        })
+
+    </script>
+</body>
+
+</html>
