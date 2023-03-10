@@ -13,24 +13,20 @@
     <main>
         <section class="todo">
             <h2>Todo</h2>
-            <form action="" onsubmit="createGoal(); return false;">
-                <label for="todo">Name</label>
-                <input type="text" name="todo" id="todo" placeholder="Todo Name">
-                <input type="submit" value="Submit">
-            </form>
-            <div class="list-item">
-                <ol>
-                </ol>
-            </div>
+            <label for="todo">Name</label>
+            <input type="text" name="todo" id="todo" placeholder="Todo Name">
+            <input type="submit" value="Submit" id="todo-submit">
+            <ol class="list-item" id="todo-list">
+            </ol>
         </section>
 
         <section class="goal">
             <h2>Goal</h2>
-            <form action="" onsubmit="createGoal(); return false;">
-                <label for="goal">Name</label>
-                <input type="text" name="goal" id="goal" placeholder="Goal Name">
-                <input type="submit" value="Submit">
-            </form>
+            <label for="goal">Name</label>
+            <input type="text" name="goal" id="goal" placeholder="Goal Name">
+            <input type="submit" value="Submit" id="goal-submit">
+            <ol class="list-item" id="goal-list">
+            </ol>
         </section>
     </main>
 
@@ -42,16 +38,75 @@
             );
         }
 
+        document.getElementById('todo-submit').addEventListener('click', () => {
+            createTodo();
+        })
+
+        document.getElementById('goal-submit').addEventListener('click', () => {
+            createGoal();
+        })
+
         const createTodo = () => {
             const input = document.getElementById('todo');
             const todoName = input.value;
             input.value = ''
 
-            store.dispatch({
+            store.dispatch(addTodoAction({
                 id: generateId(),
                 name: todoName,
                 completed: false
+            }))
+        }
+
+
+        const createGoal = () => {
+            const input = document.getElementById('goal');
+            const goalName = input.value;
+            input.value = ''
+
+            store.dispatch(addGoalAction({
+                id: generateId(),
+                name: goalName
+            }))
+        }
+
+        const createRemoveButton = (onClick) => {
+            const remove = document.createElement('button');
+            remove.innerHTML = 'x';
+            remove.addEventListener('click', onClick);
+            return remove;
+        }
+
+        const addTodoToDOM = (todo) => {
+            const node = document.createElement('li');
+            node.innerHTML = todo.name
+
+            node.style.textDecoration = todo.completed ? 'line-through' : 'none'
+
+            node.addEventListener('click', () => {
+                store.dispatch(toggleTodoAction(todo.id))
             })
+
+            const removeButton = createRemoveButton(() => {
+                store.dispatch(removeTodoAction(todo.id))
+            })
+
+            node.appendChild(removeButton);
+
+            document.getElementById('todo-list').appendChild(node);
+        }
+
+        const addGoalToDOM = (goal) => {
+            const node = document.createElement('li');
+            node.innerHTML = goal.name
+
+            const removeButton = createRemoveButton(() => {
+                store.dispatch(removeGoalAction(goal.id))
+            })
+
+            node.appendChild(removeButton);
+
+            document.getElementById('goal-list').appendChild(node);
         }
 
         const ADD_TODO = 'ADD_TODO';
@@ -70,7 +125,7 @@
                     return state.map(goal => goal.id !== action.id ? goal : Object.assign({}, goal, action.goal))
                     break;
                 case REMOVE_GOAL:
-                    return state.filter(goal => goal.id == action.id)
+                    return state.filter(goal => goal.id !== action.id)
                     break;
 
                 default:
@@ -91,7 +146,7 @@
                     return state.map(todo => todo.id !== action.id ? todo : Object.assign({}, todo, { completed: !todo.completed }))
                     break;
                 case REMOVE_TODO:
-                    return state.filter(todo => todo.id == action.id)
+                    return state.filter(todo => todo.id !== action.id)
                     break;
 
                 default:
@@ -185,45 +240,15 @@
         const store = createStore(app);
 
         store.subscribe(() => {
-            console.log('The new state is: ', store.getState());
-        })
+            const { todos, goals } = store.getState();
+            console.log(store.getState())
 
-        store.dispatch({
-            type: ADD_TODO,
-            todo: {
-                id: 1,
-                name: 'Learning English',
-                completed: false
-            }
-        })
+            document.getElementById('todo-list').innerHTML = ''
+            document.getElementById('goal-list').innerHTML = ''
 
-        store.dispatch({
-            type: ADD_TODO,
-            todo: {
-                id: 2,
-                name: 'Learning React',
-                completed: false
-            }
+            todos.forEach(addTodoToDOM)
+            goals.forEach(addGoalToDOM)
         })
-
-        store.dispatch({
-            type: ADD_TODO,
-            todo: {
-                id: 3,
-                name: 'Learning Angular',
-                completed: false
-            }
-        })
-
-        store.dispatch({
-            type: ADD_GOAL,
-            goal: {
-                id: 1,
-                name: 'Get React Cert',
-                completed: false
-            }
-        })
-
     </script>
 </body>
 
